@@ -3,3 +3,7 @@
 phase1
 phase1.exe
 vgcore.*
+dns_query
+dns_query.dSYM/
+helper1.o
+phase1.dSYM/
