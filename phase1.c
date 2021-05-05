@@ -19,20 +19,21 @@ int main(int argc, char *argv[])
     bytes_read = read(STDIN_FILENO, buf, nbytes);
 
     // extract number
-    int number = strtol(&buf[15], NULL, 16);
-    printf("number: %d\n", number);
+    char number = (char)buf[15];
+    printf("number: %c\n", number);
 
     // extract size
-    int size = strtol(&buf[16], NULL, 16);
+    int size = (int)buf[16];
     printf("size: %d\n", size);
 
     // extract data
-    // j = 0;
-    // char data[10];
-    // for (i = 17; i < 17 + 9; i++)
-    // {
-    //     data[j++] = buf[i];
-    // }
+    j = 0;
+    char data[10];
+    for (i = 17; i < 17 + 9; i++)
+    {
+        data[j++] = (char)buf[i];
+    }
+    printf("data: %s\n", data);
 
     // extract type
     j = 0;
