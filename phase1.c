@@ -19,18 +19,14 @@ int main(int argc, char *argv[])
     nbytes = sizeof(buf);
     bytes_read = read(STDIN_FILENO, buf, nbytes);
 
-    // extract number
-    char number = (char)buf[15];
-    printf("number: %c\n", number);
-
     // extract size
     int size = (int)buf[16];
     printf("size: %d\n", size);
 
     // extract data
     j = 0;
-    char data[10];
-    for (i = 17; i < 17 + 9; i++)
+    char data[20];
+    for (i = 15; i < 15 + 2 + size; i++)
     {
         data[j++] = (char)buf[i];
     }
@@ -78,12 +74,17 @@ int main(int argc, char *argv[])
 
     // write to log file
     FILE *log_file;
-    log_file = fopen("dns_svr.log", "w");
+    log_file = fopen("dns_svr.log", "a");
 
     if (log_file == NULL)
     {
         printf("Error!");
         exit(1);
+    }
+
+    if (strcmp(argv[1], "query") == 0)
+    {
+        fprintf(log_file, "%s requested %s\n", cur_time, data);
     }
 
     if (type[0] == '\x00' && type[1] == '\x1c')
