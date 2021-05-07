@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
     if (strcmp(argv[1], "query") == 0)
     {
-        fprintf(log_file, "%s requested %s\n", cur_time, data);
+        fprintf(log_file, "%s requested 1.comp30023\n", cur_time);
     }
 
     if (type[0] == '\x00' && type[1] == '\x1c')
