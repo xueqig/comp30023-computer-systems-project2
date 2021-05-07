@@ -63,4 +63,17 @@ int main(int argc, char *argv[])
     char ipv6_addr[40];
     inet_ntop(AF_INET6, addr, ipv6_addr, sizeof(ipv6_addr));
     printf("ipv6_addr: %s\n", ipv6_addr);
+
+    // write to log file
+    FILE *log_file;
+    log_file = fopen("dns_svr.log", "w");
+
+    if (log_file == NULL)
+    {
+        printf("Error!");
+        exit(1);
+    }
+
+    fprintf(log_file, "hello\n");
+    fflush(log_file);
 }
