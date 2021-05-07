@@ -3,6 +3,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <time.h>
 int main(int argc, char *argv[])
 {
     // get query or response
@@ -64,6 +65,17 @@ int main(int argc, char *argv[])
     inet_ntop(AF_INET6, addr, ipv6_addr, sizeof(ipv6_addr));
     printf("ipv6_addr: %s\n", ipv6_addr);
 
+    // get time
+    time_t t;
+    struct tm *tmp;
+    char cur_time[50];
+
+    time(&t);
+    tmp = localtime(&t);
+    strftime(cur_time, sizeof(cur_time), "%FT%T%z", tmp);
+
+    printf("Formatted time : %s\n", cur_time);
+
     // write to log file
     FILE *log_file;
     log_file = fopen("dns_svr.log", "w");
@@ -74,6 +86,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    fprintf(log_file, "hello\n");
+    if (type[0] == '\x00' && type[1] == '\x1c')
+    {
+    }
+    else
+    {
+        fprintf(log_file, "%s unimplemented request\n", cur_time);
+        fflush(log_file);
+    }
+
     fflush(log_file);
 }
