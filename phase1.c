@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
     ssize_t bytes_read;
 
     nbytes = sizeof(buf);
-    bytes_read = read(STDIN_FILENO, buf, nbytes);
+    read(STDIN_FILENO, buf, nbytes);
 
     // extract request or response
     int qr;
