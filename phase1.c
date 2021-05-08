@@ -9,7 +9,6 @@ int main(int argc, char *argv[])
     // read .raw data
     char buf[200];
     size_t nbytes;
-    ssize_t bytes_read;
 
     nbytes = sizeof(buf);
     read(STDIN_FILENO, buf, nbytes);
