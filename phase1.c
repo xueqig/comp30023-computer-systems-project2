@@ -6,10 +6,6 @@
 #include <time.h>
 int main(int argc, char *argv[])
 {
-    // get query or response
-    printf("%s\n", argv[1]);
-
-    int i, j;
 
     // read .raw data
     char buf[200];
@@ -19,22 +15,37 @@ int main(int argc, char *argv[])
     nbytes = sizeof(buf);
     bytes_read = read(STDIN_FILENO, buf, nbytes);
 
-    // extract size
-    int size = (int)buf[16];
-    printf("size: %d\n", size);
+    // extract request or response
+    int qr = (int)(buf[4] >> 1);
+    printf("qr: %d\n", qr);
 
-    // extract data
-    j = 0;
-    char data[20];
-    for (i = 15; i < 15 + 2 + size; i++)
+    // extract domain name
+    char *qname;
+    int i = 14;
+    int j = 0;
+    int k;
+    int tot_len = 0;
+    qname = (char *)malloc(tot_len);
+
+    while ((int)buf[i] != 0)
     {
-        data[j++] = (char)buf[i];
+        int sec_len = (int)buf[i];
+        tot_len += (sec_len + 1);
+        qname = (char *)realloc(qname, tot_len);
+
+        for (k = 0; k < sec_len; k++)
+        {
+            qname[j++] = buf[i + k + 1];
+        }
+        qname[j++] = '.';
+        i += (sec_len + 1);
     }
-    printf("data: %s\n", data);
+    qname[j - 1] = '\0';
+    printf("qname: %s\n", qname);
 
     // extract type
-    j = 0;
     char type[2];
+    j = 0;
     for (i = 27; i < 27 + 4; i++)
     {
         type[j++] = buf[i];
@@ -50,8 +61,8 @@ int main(int argc, char *argv[])
     }
 
     // extract ipv6 address part
-    j = 0;
     char addr[16];
+    j = 0;
     for (i = 43; i < 43 + 16; i++)
     {
         addr[j++] = buf[i];
