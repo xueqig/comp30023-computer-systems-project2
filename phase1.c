@@ -6,7 +6,6 @@
 #include <time.h>
 int main(int argc, char *argv[])
 {
-
     // read .raw data
     char buf[200];
     size_t nbytes;
@@ -16,7 +15,7 @@ int main(int argc, char *argv[])
     bytes_read = read(STDIN_FILENO, buf, nbytes);
 
     // extract request or response
-    int qr = (int)(buf[4]);
+    int qr = (int)(buf[4] >> 4 & 0x0F);
     printf("qr: %d\n", qr);
 
     // extract domain name
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
     inet_ntop(AF_INET6, addr, ipv6_addr, sizeof(ipv6_addr));
     printf("ipv6_addr: %s\n", ipv6_addr);
 
-    // get time
+    // get current time
     time_t t;
     struct tm *tmp;
     char cur_time[50];
@@ -72,28 +71,28 @@ int main(int argc, char *argv[])
 
     printf("cur_time : %s\n", cur_time);
 
-    // // write to log file
-    // FILE *log_file;
-    // log_file = fopen("dns_svr.log", "a");
+    // write to log file
+    FILE *log_file;
+    log_file = fopen("dns_svr.log", "a");
 
-    // if (log_file == NULL)
-    // {
-    //     printf("Error!");
-    //     exit(1);
-    // }
+    if (log_file == NULL)
+    {
+        printf("Error!");
+        exit(1);
+    }
 
-    // if (strcmp(argv[1], "query") == 0)
-    // {
-    //     fprintf(log_file, "%s requested 1.comp30023\n", cur_time);
-    //     fflush(log_file);
-    // }
+    if (strcmp(argv[1], "query") == 0)
+    {
+        fprintf(log_file, "%s requested 1.comp30023\n", cur_time);
+        fflush(log_file);
+    }
 
-    // if (type[0] == '\x00' && type[1] == '\x1c')
-    // {
-    // }
-    // else
-    // {
-    //     fprintf(log_file, "%s unimplemented request\n", cur_time);
-    //     fflush(log_file);
-    // }
+    if (type[0] == '\x00' && type[1] == '\x1c')
+    {
+    }
+    else
+    {
+        fprintf(log_file, "%s unimplemented request\n", cur_time);
+        fflush(log_file);
+    }
 }
