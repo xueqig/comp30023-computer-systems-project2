@@ -15,7 +15,15 @@ int main(int argc, char *argv[])
     bytes_read = read(STDIN_FILENO, buf, nbytes);
 
     // extract request or response
-    int qr = (int)(buf[4] >> 4 & 0x0F);
+    int qr;
+    if ((int)(buf[4] >> 4 & 0x0F) == 0)
+    {
+        qr = 0;
+    }
+    else
+    {
+        qr = 1;
+    }
     printf("qr: %d\n", qr);
 
     // extract domain name
@@ -81,18 +89,19 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if (strcmp(argv[1], "query") == 0)
+    if (qr == 0)
     {
-        fprintf(log_file, "%s requested 1.comp30023\n", cur_time);
+        fprintf(log_file, "%s requested %s\n", cur_time, qname);
         fflush(log_file);
-    }
-
-    if (type[0] == '\x00' && type[1] == '\x1c')
-    {
+        if (qtype != 28)
+        {
+            fprintf(log_file, "%s unimplemented request\n", cur_time);
+            fflush(log_file);
+        }
     }
     else
     {
-        fprintf(log_file, "%s unimplemented request\n", cur_time);
+        fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
         fflush(log_file);
     }
 }
