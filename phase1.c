@@ -16,56 +16,45 @@ int main(int argc, char *argv[])
     bytes_read = read(STDIN_FILENO, buf, nbytes);
 
     // extract request or response
-    int qr = (int)(buf[4] >> 1);
+    int qr = (int)(buf[4]);
     printf("qr: %d\n", qr);
 
     // extract domain name
     char *qname;
-    int i = 14;
-    int j = 0;
-    int k;
+    int msg_idx = 14;
+    int qname_idx = 0;
+
     int tot_len = 0;
     qname = (char *)malloc(tot_len);
 
-    while ((int)buf[i] != 0)
+    while ((int)buf[msg_idx] != 0)
     {
-        int sec_len = (int)buf[i];
+        int sec_len = (int)buf[msg_idx];
         tot_len += (sec_len + 1);
         qname = (char *)realloc(qname, tot_len);
-
-        for (k = 0; k < sec_len; k++)
+        int i;
+        for (i = 0; i < sec_len; i++)
         {
-            qname[j++] = buf[i + k + 1];
+            qname[qname_idx++] = buf[msg_idx + i + 1];
         }
-        qname[j++] = '.';
-        i += (sec_len + 1);
+        qname[qname_idx++] = '.';
+        msg_idx += (sec_len + 1);
     }
-    qname[j - 1] = '\0';
+    qname[qname_idx - 1] = '\0';
     printf("qname: %s\n", qname);
 
-    // extract type
-    char type[2];
-    j = 0;
-    for (i = 27; i < 27 + 4; i++)
-    {
-        type[j++] = buf[i];
-    }
-
-    if (type[0] == '\x00' && type[1] == '\x1c')
-    {
-        printf("AAAA\n");
-    }
-    else
-    {
-        printf("Not AAAA\n");
-    }
+    // extract qtype
+    msg_idx += 2;
+    int qtype = buf[msg_idx];
+    printf("qtype: %d\n", qtype);
 
     // extract ipv6 address part
+    msg_idx += 15;
     char addr[16];
-    j = 0;
-    for (i = 43; i < 43 + 16; i++)
+    int i;
+    for (i = 0; i < 16; i++)
     {
-        addr[j++] = buf[i];
+        addr[i] = buf[msg_idx++];
     }
 
     char ipv6_addr[40];
@@ -81,30 +70,30 @@ int main(int argc, char *argv[])
     tmp = localtime(&t);
     strftime(cur_time, sizeof(cur_time), "%FT%T%z", tmp);
 
-    printf("Formatted time : %s\n", cur_time);
+    printf("cur_time : %s\n", cur_time);
 
-    // write to log file
-    FILE *log_file;
-    log_file = fopen("dns_svr.log", "a");
+    // // write to log file
+    // FILE *log_file;
+    // log_file = fopen("dns_svr.log", "a");
 
-    if (log_file == NULL)
-    {
-        printf("Error!");
-        exit(1);
-    }
+    // if (log_file == NULL)
+    // {
+    //     printf("Error!");
+    //     exit(1);
+    // }
 
-    if (strcmp(argv[1], "query") == 0)
-    {
-        fprintf(log_file, "%s requested 1.comp30023\n", cur_time);
-        fflush(log_file);
-    }
+    // if (strcmp(argv[1], "query") == 0)
+    // {
+    //     fprintf(log_file, "%s requested 1.comp30023\n", cur_time);
+    //     fflush(log_file);
+    // }
 
-    if (type[0] == '\x00' && type[1] == '\x1c')
-    {
-    }
-    else
-    {
-        fprintf(log_file, "%s unimplemented request\n", cur_time);
-        fflush(log_file);
-    }
+    // if (type[0] == '\x00' && type[1] == '\x1c')
+    // {
+    // }
+    // else
+    // {
+    //     fprintf(log_file, "%s unimplemented request\n", cur_time);
+    //     fflush(log_file);
+    // }
 }
