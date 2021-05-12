@@ -116,12 +116,14 @@ int main(int argc, char *argv[])
 
     //////////////////////////////////////////////////////////////////
     // Write message back
-    n = write(newsockfd, "I got your message", 18);
+    n = write(newsockfd, res_buf, 70);
     if (n < 0)
     {
         perror("write");
         exit(EXIT_FAILURE);
     }
+
+    printf("after write\n");
 
     close(sockfd);
     close(newsockfd);
@@ -205,6 +207,8 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len)
     }
     // Null-terminate string
     buffer[n] = '\0';
+
+    printf("n: %d\n", n);
 
     close(sockfd);
 
