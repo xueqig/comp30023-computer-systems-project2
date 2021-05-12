@@ -1,6 +1,7 @@
 #include "helper1.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 int get_qr(uint8_t buffer[])
 {

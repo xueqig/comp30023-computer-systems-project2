@@ -1,7 +1,7 @@
 #ifndef HELPER1_H
 #define HELPER1_H
 
-#include <stdlib.h>
+#include <stdint.h>
 
 int get_qr(uint8_t buffer[]);
 char *get_qname(uint8_t buffer[]);
