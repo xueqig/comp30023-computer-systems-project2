@@ -8,19 +8,18 @@
 
 int main(int argc, char *argv[])
 {
-    helper(1);
     // Server
     int sockfd, newsockfd, n, re, s;
-    char buffer[256];
+    uint8_t buffer[256];
     struct addrinfo hints, *res;
     struct sockaddr_storage client_addr;
     socklen_t client_addr_size;
 
-    if (argc < 2)
-    {
-        fprintf(stderr, "ERROR, no port provided\n");
-        exit(EXIT_FAILURE);
-    }
+    // if (argc < 2)
+    // {
+    //     fprintf(stderr, "ERROR, no port provided\n");
+    //     exit(EXIT_FAILURE);
+    // }
 
     // Create address we're going to listen on (with given port number)
     memset(&hints, 0, sizeof hints);
@@ -28,7 +27,7 @@ int main(int argc, char *argv[])
     hints.ai_socktype = SOCK_STREAM; // TCP
     hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
     // node (NULL means any interface), service (port), hints, res
-    s = getaddrinfo(NULL, argv[1], &hints, &res);
+    s = getaddrinfo(NULL, "8053", &hints, &res);
     if (s != 0)
     {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
@@ -87,14 +86,25 @@ int main(int argc, char *argv[])
     // Null-terminate string
     buffer[n] = '\0';
 
-    // // Write message back
-    // printf("Here is the message: %s\n", buffer);
-    // n = write(newsockfd, "I got your message", 18);
-    // if (n < 0)
-    // {
-    //     perror("write");
-    //     exit(EXIT_FAILURE);
-    // }
+    int qr = get_qr(buffer);
+    char *qname = get_qname(buffer);
+    int qtype = get_qtype(buffer);
+
+    printf("qr: %d\n", qr);
+    printf("qname: %s\n", qname);
+    printf("qtype: %d\n", qtype);
+
+    // Write message back
+    printf("Here is the qr: %d\n", qr);
+    printf("Here is the qname: %s\n", qname);
+    printf("Here is the qtype: %d\n", qtype);
+
+    n = write(newsockfd, "I got your message", 18);
+    if (n < 0)
+    {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
 
     close(sockfd);
     close(newsockfd);

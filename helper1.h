@@ -1,6 +1,10 @@
 #ifndef HELPER1_H
 #define HELPER1_H
 
-void helper(int i);
+#include <stdlib.h>
+
+int get_qr(uint8_t buffer[]);
+char *get_qname(uint8_t buffer[]);
+int get_qtype(uint8_t buffer[]);
 
 #endif
