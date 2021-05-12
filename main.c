@@ -4,9 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "helper1.h"
 
 int main(int argc, char *argv[])
 {
+    helper(1);
     // Server
     int sockfd, newsockfd, n, re, s;
     char buffer[256];
