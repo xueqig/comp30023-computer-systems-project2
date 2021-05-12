@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include "helper1.h"
 
-void query_server(char *node, char *service, uint8_t buffer[], int buf_len);
+uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len);
 
 int main(int argc, char *argv[])
 {
@@ -103,14 +103,19 @@ int main(int argc, char *argv[])
     printf("us_svr_ip: %s\n", us_svr_ip);
     printf("us_svr_port: %s\n", us_svr_port);
 
-    query_server(us_svr_ip, us_svr_port, buffer, n);
+    uint8_t *res_buf;
+    res_buf = query_server(us_svr_ip, us_svr_port, buffer, n);
+
+    int res_qr = get_qr(res_buf);
+    char *res_qname = get_qname(res_buf);
+    int res_qtype = get_qtype(res_buf);
+
+    printf("res qr: %d\n", res_qr);
+    printf("res qname: %s\n", res_qname);
+    printf("res qtype: %d\n", res_qtype);
 
     //////////////////////////////////////////////////////////////////
     // Write message back
-    printf("Here is the qr: %d\n", qr);
-    printf("Here is the qname: %s\n", qname);
-    printf("Here is the qtype: %d\n", qtype);
-
     n = write(newsockfd, "I got your message", 18);
     if (n < 0)
     {
@@ -123,7 +128,8 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void query_server(char *node, char *service, uint8_t buffer[], int buf_len)
+// send query to upstream server and return an response
+uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len)
 {
     int sockfd, n, s;
     struct addrinfo hints, *servinfo, *rp;
@@ -200,15 +206,7 @@ void query_server(char *node, char *service, uint8_t buffer[], int buf_len)
     // Null-terminate string
     buffer[n] = '\0';
 
-    printf("read, n = %d\n", n);
-
-    int qr = get_qr(buffer);
-    char *qname = get_qname(buffer);
-    int qtype = get_qtype(buffer);
-
-    printf("rs qr: %d\n", qr);
-    printf("rs qname: %s\n", qname);
-    printf("rs qtype: %d\n", qtype);
-
     close(sockfd);
+
+    return buffer;
 }
