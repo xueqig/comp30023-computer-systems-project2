@@ -7,15 +7,15 @@
 int main(int argc, char *argv[])
 {
     // read .raw data
-    char buf[200];
+    char buffer[200];
     size_t nbytes;
 
-    nbytes = sizeof(buf);
-    read(STDIN_FILENO, buf, nbytes);
+    nbytes = sizeof(buffer);
+    read(STDIN_FILENO, buffer, nbytes);
 
     // extract request or response
     int qr;
-    if ((int)(buf[4] >> 4 & 0x0F) == 0)
+    if ((int)(buffer[4] >> 4 & 0x0F) == 0)
     {
         qr = 0;
     }
@@ -33,15 +33,15 @@ int main(int argc, char *argv[])
     int tot_len = 0;
     qname = (char *)malloc(tot_len);
 
-    while ((int)buf[msg_idx] != 0)
+    while ((int)buffer[msg_idx] != 0)
     {
-        int sec_len = (int)buf[msg_idx];
+        int sec_len = (int)buffer[msg_idx];
         tot_len += (sec_len + 1);
         qname = (char *)realloc(qname, tot_len);
         int i;
         for (i = 0; i < sec_len; i++)
         {
-            qname[qname_idx++] = buf[msg_idx + i + 1];
+            qname[qname_idx++] = buffer[msg_idx + i + 1];
         }
         qname[qname_idx++] = '.';
         msg_idx += (sec_len + 1);
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
     // extract qtype
     msg_idx += 2;
-    int qtype = buf[msg_idx];
+    int qtype = buffer[msg_idx];
     printf("qtype: %d\n", qtype);
 
     // extract ipv6 address part
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     int i;
     for (i = 0; i < 16; i++)
     {
-        addr[i] = buf[msg_idx++];
+        addr[i] = buffer[msg_idx++];
     }
 
     char ipv6_addr[40];

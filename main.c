@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-    // server
+    // Server
     int sockfd, newsockfd, n, re, s;
     char buffer[256];
     struct addrinfo hints, *res;
@@ -85,14 +85,14 @@ int main(int argc, char *argv[])
     // Null-terminate string
     buffer[n] = '\0';
 
-    // Write message back
-    printf("Here is the message: %s\n", buffer);
-    n = write(newsockfd, "I got your message", 18);
-    if (n < 0)
-    {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
+    // // Write message back
+    // printf("Here is the message: %s\n", buffer);
+    // n = write(newsockfd, "I got your message", 18);
+    // if (n < 0)
+    // {
+    //     perror("write");
+    //     exit(EXIT_FAILURE);
+    // }
 
     close(sockfd);
     close(newsockfd);
