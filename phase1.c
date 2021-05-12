@@ -7,7 +7,7 @@
 int main(int argc, char *argv[])
 {
     // read .raw data
-    char buffer[200];
+    uint8_t buffer[200];
     size_t nbytes;
 
     nbytes = sizeof(buffer);
