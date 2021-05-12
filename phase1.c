@@ -4,6 +4,8 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <time.h>
+#include "helper1.h"
+
 int main(int argc, char *argv[])
 {
     // read .raw data
@@ -14,15 +16,15 @@ int main(int argc, char *argv[])
     read(STDIN_FILENO, buffer, nbytes);
 
     // extract request or response
-    int qr;
-    if ((int)(buffer[4] >> 4 & 0x0F) == 0)
-    {
-        qr = 0;
-    }
-    else
-    {
-        qr = 1;
-    }
+    int qr = get_qr(buffer);
+    // if ((int)(buffer[4] >> 4 & 0x0F) == 0)
+    // {
+    //     qr = 0;
+    // }
+    // else
+    // {
+    //     qr = 1;
+    // }
     printf("qr: %d\n", qr);
 
     // extract domain name
