@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include "helper1.h"
 
+void query_server(char *node, char *service, uint8_t buffer[], int buf_len);
+
 int main(int argc, char *argv[])
 {
     // Act as a server to accept query from client (dig)
@@ -101,6 +103,8 @@ int main(int argc, char *argv[])
     printf("us_svr_ip: %s\n", us_svr_ip);
     printf("us_svr_port: %s\n", us_svr_port);
 
+    query_server(us_svr_ip, us_svr_port, buffer, n);
+
     //////////////////////////////////////////////////////////////////
     // Write message back
     printf("Here is the qr: %d\n", qr);
@@ -117,4 +121,94 @@ int main(int argc, char *argv[])
     close(sockfd);
     close(newsockfd);
     return 0;
+}
+
+void query_server(char *node, char *service, uint8_t buffer[], int buf_len)
+{
+    int sockfd, n, s;
+    struct addrinfo hints, *servinfo, *rp;
+    // char buffer[256];
+
+    // if (argc < 3)
+    // {
+    //     fprintf(stderr, "usage %s hostname port\n", argv[0]);
+    //     exit(EXIT_FAILURE);
+    // }
+
+    // Create address
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    // Get addrinfo of server. From man page:
+    // The getaddrinfo() function combines the functionality provided by the
+    // gethostbyname(3) and getservbyname(3) functions into a single interface
+    // // argv[1] is my ip address, argv[2] is port
+    s = getaddrinfo(node, service, &hints, &servinfo);
+    if (s != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+        exit(EXIT_FAILURE);
+    }
+
+    // Connect to first valid result
+    // Why are there multiple results? see man page (search 'several reasons')
+    // How to search? enter /, then text to search for, press n/N to navigate
+    for (rp = servinfo; rp != NULL; rp = rp->ai_next)
+    {
+        sockfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (sockfd == -1)
+            continue;
+
+        if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != -1)
+            break; // connection success
+
+        close(sockfd);
+    }
+    if (rp == NULL)
+    {
+        // // connection fail
+        fprintf(stderr, "client: failed to connect\n");
+        exit(EXIT_FAILURE);
+    }
+    freeaddrinfo(servinfo);
+
+    // // Read message from stdin
+    // printf("Please enter the message: ");
+    // if (fgets(buffer, 255, stdin) == NULL)
+    // {
+    //     exit(EXIT_SUCCESS);
+    // }
+    // // Remove \n that was read by fgets
+    // buffer[strlen(buffer) - 1] = 0;
+
+    // Send message to server
+    n = write(sockfd, buffer, buf_len);
+    if (n < 0)
+    {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read message from server
+    n = read(sockfd, buffer, 255);
+    if (n < 0)
+    {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+    // Null-terminate string
+    buffer[n] = '\0';
+
+    printf("read, n = %d\n", n);
+
+    int qr = get_qr(buffer);
+    char *qname = get_qname(buffer);
+    int qtype = get_qtype(buffer);
+
+    printf("rs qr: %d\n", qr);
+    printf("rs qname: %s\n", qname);
+    printf("rs qtype: %d\n", qtype);
+
+    close(sockfd);
 }
