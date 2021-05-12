@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[])
 {
-    // Server
+    // Act as a server to accept query from client (dig)
     int sockfd, newsockfd, n, re, s;
     uint8_t buffer[256];
     struct addrinfo hints, *res;
@@ -94,6 +94,14 @@ int main(int argc, char *argv[])
     printf("qname: %s\n", qname);
     printf("qtype: %d\n", qtype);
 
+    /////////////////////////////////////////////////////////////////
+    // Act as a client to query upperstream server
+    char *us_svr_ip = argv[1];
+    char *us_svr_port = argv[2];
+    printf("us_svr_ip: %s\n", us_svr_ip);
+    printf("us_svr_port: %s\n", us_svr_port);
+
+    //////////////////////////////////////////////////////////////////
     // Write message back
     printf("Here is the qr: %d\n", qr);
     printf("Here is the qname: %s\n", qname);
