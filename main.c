@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
     // Act as a server to accept query from client (dig)
     int sockfd, newsockfd, n, re, s;
-    uint8_t buffer[256];
+    uint8_t req_buf[256];
     struct addrinfo hints, *res;
     struct sockaddr_storage client_addr;
     socklen_t client_addr_size;
@@ -79,18 +79,18 @@ int main(int argc, char *argv[])
     }
 
     // Read characters from the connection, then process
-    n = read(newsockfd, buffer, 255); // n is number of characters read
+    n = read(newsockfd, req_buf, 255); // n is number of characters read
     if (n < 0)
     {
         perror("read");
         exit(EXIT_FAILURE);
     }
     // Null-terminate string
-    buffer[n] = '\0';
+    req_buf[n] = '\0';
 
-    int qr = get_qr(buffer);
-    char *qname = get_qname(buffer);
-    int qtype = get_qtype(buffer);
+    int qr = get_qr(req_buf);
+    char *qname = get_qname(req_buf);
+    int qtype = get_qtype(req_buf);
 
     printf("qr: %d\n", qr);
     printf("qname: %s\n", qname);
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     printf("us_svr_port: %s\n", us_svr_port);
 
     uint8_t *res_buf;
-    res_buf = query_server(us_svr_ip, us_svr_port, buffer, n);
+    res_buf = query_server(us_svr_ip, us_svr_port, req_buf, n);
 
     int res_qr = get_qr(res_buf);
     char *res_qname = get_qname(res_buf);
