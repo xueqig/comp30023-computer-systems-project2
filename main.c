@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include "helper1.h"
 
-uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len);
+uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 
 int main(int argc, char *argv[])
 {
@@ -104,7 +104,8 @@ int main(int argc, char *argv[])
     printf("us_svr_port: %s\n", us_svr_port);
 
     uint8_t *res_buf;
-    res_buf = query_server(us_svr_ip, us_svr_port, req_buf, n);
+    int res_buf_len;
+    res_buf = query_server(us_svr_ip, us_svr_port, req_buf, n, &res_buf_len);
 
     int res_qr = get_qr(res_buf);
     char *res_qname = get_qname(res_buf);
@@ -116,7 +117,7 @@ int main(int argc, char *argv[])
 
     //////////////////////////////////////////////////////////////////
     // Write message back
-    n = write(newsockfd, res_buf, 70);
+    n = write(newsockfd, res_buf, res_buf_len);
     if (n < 0)
     {
         perror("write");
@@ -131,7 +132,7 @@ int main(int argc, char *argv[])
 }
 
 // send query to upstream server and return an response
-uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len)
+uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len)
 {
     int sockfd, n, s;
     struct addrinfo hints, *servinfo, *rp;
@@ -190,16 +191,16 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len)
     }
 
     // Read message from server
-    n = read(sockfd, buffer, 255);
-    if (n < 0)
+    *res_buf_len = read(sockfd, buffer, 255);
+    if (*res_buf_len < 0)
     {
         perror("read");
         exit(EXIT_FAILURE);
     }
     // Null-terminate string
-    buffer[n] = '\0';
+    buffer[*res_buf_len] = '\0';
 
-    printf("n: %d\n", n);
+    printf("n: %d\n", *res_buf_len);
 
     close(sockfd);
 
