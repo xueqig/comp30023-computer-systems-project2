@@ -78,8 +78,6 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    printf("after write\n");
-
     // Read message from server
     n = read(sockfd, buffer, 255);
     if (n < 0)
@@ -89,10 +87,7 @@ int main(int argc, char **argv)
     }
     // Null-terminate string
     buffer[n] = '\0';
-
-    printf("after read\n");
-    printf("res: %x\n", buffer[0]);
-    // printf("%s\n", buffer);
+    printf("%s\n", buffer);
 
     close(sockfd);
     return 0;

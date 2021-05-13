@@ -181,6 +181,15 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len)
     }
     freeaddrinfo(servinfo);
 
+    // // Read message from stdin
+    // printf("Please enter the message: ");
+    // if (fgets(buffer, 255, stdin) == NULL)
+    // {
+    //     exit(EXIT_SUCCESS);
+    // }
+    // // Remove \n that was read by fgets
+    // buffer[strlen(buffer) - 1] = 0;
+
     // Send message to server
     n = write(sockfd, buffer, buf_len);
     if (n < 0)
