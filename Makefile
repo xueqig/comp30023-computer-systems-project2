@@ -33,3 +33,7 @@ format:
 
 clean:
 	# implement this, to remove $(BIN_PHASE[12]) and any .o files
+	rm -f dns_svr.log
+	rm -f *.o
+	rm -f phase1
+	rm -f dns_svr
