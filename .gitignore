@@ -1,1 +1,8 @@
+*.gch
 phase1
+phase1.exe
+phase1.dSYM
+dns_svr
+dns_svr.dSYM
+helper1.o
+vgcore.*
