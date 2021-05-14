@@ -73,37 +73,39 @@ int main(int argc, char *argv[])
     // get current time
     // time_t t;
     // struct tm *tmp;
-    char *cur_time = get_cur_time();
+    // char *cur_time = get_cur_time();
 
     // time(&t);
     // tmp = localtime(&t);
     // strftime(cur_time, sizeof(cur_time), "%FT%T%z", tmp);
 
-    printf("cur_time : %s\n", cur_time);
+    // printf("cur_time : %s\n", cur_time);
 
     // write to log file
-    FILE *log_file;
-    log_file = fopen("dns_svr.log", "a");
+    write_log(qr, qname, qtype, ipv6_addr);
 
-    if (log_file == NULL)
-    {
-        printf("Error!");
-        exit(1);
-    }
+    // FILE *log_file;
+    // log_file = fopen("dns_svr.log", "a");
 
-    if (qr == 0)
-    {
-        fprintf(log_file, "%s requested %s\n", cur_time, qname);
-        fflush(log_file);
-        if (qtype != 28)
-        {
-            fprintf(log_file, "%s unimplemented request\n", cur_time);
-            fflush(log_file);
-        }
-    }
-    else
-    {
-        fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
-        fflush(log_file);
-    }
+    // if (log_file == NULL)
+    // {
+    //     printf("Error!");
+    //     exit(1);
+    // }
+
+    // if (qr == 0)
+    // {
+    //     fprintf(log_file, "%s requested %s\n", cur_time, qname);
+    //     fflush(log_file);
+    //     if (qtype != 28)
+    //     {
+    //         fprintf(log_file, "%s unimplemented request\n", cur_time);
+    //         fflush(log_file);
+    //     }
+    // }
+    // else
+    // {
+    //     fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
+    //     fflush(log_file);
+    // }
 }

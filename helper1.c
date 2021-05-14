@@ -102,3 +102,33 @@ char *get_cur_time()
 
     return cur_time;
 }
+
+void write_log(int qr, char *qname, int qtype, char *ipv6_addr)
+{
+    char *cur_time = get_cur_time();
+
+    FILE *log_file;
+    log_file = fopen("dns_svr.log", "a");
+
+    if (log_file == NULL)
+    {
+        printf("Error!");
+        exit(1);
+    }
+
+    if (qr == 0)
+    {
+        fprintf(log_file, "%s requested %s\n", cur_time, qname);
+        fflush(log_file);
+        if (qtype != 28)
+        {
+            fprintf(log_file, "%s unimplemented request\n", cur_time);
+            fflush(log_file);
+        }
+    }
+    else
+    {
+        fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
+        fflush(log_file);
+    }
+}
