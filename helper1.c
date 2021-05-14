@@ -87,6 +87,12 @@ char *get_ipv6_addr(uint8_t buffer[])
         return NULL;
     }
 
+    // Check if the first answer is AAAA
+    if ((int)buffer[msg_idx + 8] != AAAA_ID)
+    {
+        return NULL;
+    }
+
     // Skip qtype and other irrelevant information
     msg_idx += 17;
 
