@@ -4,133 +4,140 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include "helper1.h"
 
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
+void handle_sigint(int sig);
 
 int main(int argc, char *argv[])
 {
-    // Act as a server to accept query from client (dig)
-    int sockfd, newsockfd, n, re, s;
-    uint8_t req_buf[256];
-    struct addrinfo hints, *res;
-    struct sockaddr_storage client_addr;
-    socklen_t client_addr_size;
+    signal(SIGINT, handle_sigint);
 
-    // if (argc < 2)
-    // {
-    //     fprintf(stderr, "ERROR, no port provided\n");
-    //     exit(EXIT_FAILURE);
-    // }
-
-    // Create address we're going to listen on (with given port number)
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET;       // IPv4
-    hints.ai_socktype = SOCK_STREAM; // TCP
-    hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
-    // node (NULL means any interface), service (port), hints, res
-    s = getaddrinfo(NULL, "8053", &hints, &res);
-    if (s != 0)
+    while (1)
     {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
-        exit(EXIT_FAILURE);
+        // Act as a server to accept query from client (dig)
+        int sockfd, newsockfd, n, re, s;
+        uint8_t req_buf[256];
+        struct addrinfo hints, *res;
+        struct sockaddr_storage client_addr;
+        socklen_t client_addr_size;
+
+        // if (argc < 2)
+        // {
+        //     fprintf(stderr, "ERROR, no port provided\n");
+        //     exit(EXIT_FAILURE);
+        // }
+
+        // Create address we're going to listen on (with given port number)
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family = AF_INET;       // IPv4
+        hints.ai_socktype = SOCK_STREAM; // TCP
+        hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
+        // node (NULL means any interface), service (port), hints, res
+        s = getaddrinfo(NULL, "8053", &hints, &res);
+        if (s != 0)
+        {
+            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+            exit(EXIT_FAILURE);
+        }
+
+        // Create socket
+        sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+        if (sockfd < 0)
+        {
+            perror("socket");
+            exit(EXIT_FAILURE);
+        }
+
+        // Reuse port if possible
+        re = 1;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &re, sizeof(int)) < 0)
+        {
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+        // Bind address to the socket
+        if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0)
+        {
+            perror("bind");
+            exit(EXIT_FAILURE);
+        }
+        freeaddrinfo(res);
+
+        // Listen on socket - means we're ready to accept connections,
+        // incoming connection requests will be queued, man 3 listen
+        if (listen(sockfd, 5) < 0)
+        {
+            perror("listen");
+            exit(EXIT_FAILURE);
+        }
+
+        // Accept a connection - blocks until a connection is ready to be accepted
+        // Get back a new file descriptor to communicate on
+        client_addr_size = sizeof client_addr;
+        newsockfd =
+            accept(sockfd, (struct sockaddr *)&client_addr, &client_addr_size);
+        if (newsockfd < 0)
+        {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+
+        // Read characters from the connection, then process
+        n = read(newsockfd, req_buf, 255); // n is number of characters read
+        if (n < 0)
+        {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+        // Null-terminate string
+        req_buf[n] = '\0';
+
+        int qr = get_qr(req_buf);
+        char *qname = get_qname(req_buf);
+        int qtype = get_qtype(req_buf);
+
+        printf("qr: %d\n", qr);
+        printf("qname: %s\n", qname);
+        printf("qtype: %d\n", qtype);
+        write_log(qr, qname, qtype, NULL);
+
+        /////////////////////////////////////////////////////////////////
+        // Act as a client to query upperstream server
+        char *us_svr_ip = argv[1];
+        char *us_svr_port = argv[2];
+        printf("us_svr_ip: %s\n", us_svr_ip);
+        printf("us_svr_port: %s\n", us_svr_port);
+
+        uint8_t *res_buf;
+        int res_buf_len;
+        res_buf = query_server(us_svr_ip, us_svr_port, req_buf, n, &res_buf_len);
+
+        int res_qr = get_qr(res_buf);
+        char *res_qname = get_qname(res_buf);
+        int res_qtype = get_qtype(res_buf);
+        char *res_ipv6_addr = get_ipv6_addr(res_buf);
+
+        printf("res qr: %d\n", res_qr);
+        printf("res qname: %s\n", res_qname);
+        printf("res qtype: %d\n", res_qtype);
+        write_log(res_qr, res_qname, res_qtype, res_ipv6_addr);
+
+        //////////////////////////////////////////////////////////////////
+        // Write message back
+        n = write(newsockfd, res_buf, res_buf_len);
+        if (n < 0)
+        {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("after write\n");
+
+        close(sockfd);
+        close(newsockfd);
     }
-
-    // Create socket
-    sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    if (sockfd < 0)
-    {
-        perror("socket");
-        exit(EXIT_FAILURE);
-    }
-
-    // Reuse port if possible
-    re = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &re, sizeof(int)) < 0)
-    {
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-    // Bind address to the socket
-    if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0)
-    {
-        perror("bind");
-        exit(EXIT_FAILURE);
-    }
-    freeaddrinfo(res);
-
-    // Listen on socket - means we're ready to accept connections,
-    // incoming connection requests will be queued, man 3 listen
-    if (listen(sockfd, 5) < 0)
-    {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-
-    // Accept a connection - blocks until a connection is ready to be accepted
-    // Get back a new file descriptor to communicate on
-    client_addr_size = sizeof client_addr;
-    newsockfd =
-        accept(sockfd, (struct sockaddr *)&client_addr, &client_addr_size);
-    if (newsockfd < 0)
-    {
-        perror("accept");
-        exit(EXIT_FAILURE);
-    }
-
-    // Read characters from the connection, then process
-    n = read(newsockfd, req_buf, 255); // n is number of characters read
-    if (n < 0)
-    {
-        perror("read");
-        exit(EXIT_FAILURE);
-    }
-    // Null-terminate string
-    req_buf[n] = '\0';
-
-    int qr = get_qr(req_buf);
-    char *qname = get_qname(req_buf);
-    int qtype = get_qtype(req_buf);
-
-    printf("qr: %d\n", qr);
-    printf("qname: %s\n", qname);
-    printf("qtype: %d\n", qtype);
-    write_log(qr, qname, qtype, NULL);
-
-    /////////////////////////////////////////////////////////////////
-    // Act as a client to query upperstream server
-    char *us_svr_ip = argv[1];
-    char *us_svr_port = argv[2];
-    printf("us_svr_ip: %s\n", us_svr_ip);
-    printf("us_svr_port: %s\n", us_svr_port);
-
-    uint8_t *res_buf;
-    int res_buf_len;
-    res_buf = query_server(us_svr_ip, us_svr_port, req_buf, n, &res_buf_len);
-
-    int res_qr = get_qr(res_buf);
-    char *res_qname = get_qname(res_buf);
-    int res_qtype = get_qtype(res_buf);
-    char *res_ipv6_addr = get_ipv6_addr(res_buf);
-
-    printf("res qr: %d\n", res_qr);
-    printf("res qname: %s\n", res_qname);
-    printf("res qtype: %d\n", res_qtype);
-    write_log(res_qr, res_qname, res_qtype, res_ipv6_addr);
-
-    //////////////////////////////////////////////////////////////////
-    // Write message back
-    n = write(newsockfd, res_buf, res_buf_len);
-    if (n < 0)
-    {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("after write\n");
-
-    close(sockfd);
-    close(newsockfd);
     return 0;
 }
 
@@ -208,4 +215,10 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     close(sockfd);
 
     return buffer;
+}
+
+void handle_sigint(int sig)
+{
+    printf("Caught signal %d\n", sig);
+    exit(0);
 }
