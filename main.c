@@ -23,12 +23,6 @@ int main(int argc, char *argv[])
         struct sockaddr_storage client_addr;
         socklen_t client_addr_size;
 
-        // if (argc < 2)
-        // {
-        //     fprintf(stderr, "ERROR, no port provided\n");
-        //     exit(EXIT_FAILURE);
-        // }
-
         // Create address we're going to listen on (with given port number)
         memset(&hints, 0, sizeof hints);
         hints.ai_family = AF_INET;       // IPv4
@@ -148,12 +142,6 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     struct addrinfo hints, *servinfo, *rp;
     // char buffer[256];
 
-    // if (argc < 3)
-    // {
-    //     fprintf(stderr, "usage %s hostname port\n", argv[0]);
-    //     exit(EXIT_FAILURE);
-    // }
-
     // Create address
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
@@ -162,7 +150,6 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     // Get addrinfo of server. From man page:
     // The getaddrinfo() function combines the functionality provided by the
     // gethostbyname(3) and getservbyname(3) functions into a single interface
-    // // argv[1] is my ip address, argv[2] is port
     s = getaddrinfo(node, service, &hints, &servinfo);
     if (s != 0)
     {
