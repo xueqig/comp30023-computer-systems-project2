@@ -6,5 +6,7 @@
 int get_qr(uint8_t buffer[]);
 char *get_qname(uint8_t buffer[]);
 int get_qtype(uint8_t buffer[]);
+char *get_ipv6_addr(uint8_t buffer[]);
+char *get_cur_time();
 
 #endif

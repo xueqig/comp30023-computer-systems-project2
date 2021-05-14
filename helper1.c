@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <arpa/inet.h>
+#include <time.h>
 
 int get_qr(uint8_t buffer[])
 {
@@ -60,4 +62,43 @@ int get_qtype(uint8_t buffer[])
     int qtype = buffer[msg_idx];
 
     return qtype;
+}
+
+char *get_ipv6_addr(uint8_t buffer[])
+{
+    int msg_idx = 14;
+
+    // Skip header and qname of the message
+    while ((int)buffer[msg_idx] != 0)
+    {
+        msg_idx++;
+    }
+
+    // Skip qtype and other irrelevant information
+    msg_idx += 17;
+
+    char addr[16];
+    int i;
+    for (i = 0; i < 16; i++)
+    {
+        addr[i] = buffer[msg_idx++];
+    }
+
+    static char ipv6_addr[40];
+    inet_ntop(AF_INET6, addr, ipv6_addr, 40);
+
+    return ipv6_addr;
+}
+
+char *get_cur_time()
+{
+    time_t t;
+    struct tm *tmp;
+    static char cur_time[50];
+
+    time(&t);
+    tmp = localtime(&t);
+    strftime(cur_time, sizeof(cur_time), "%FT%T%z", tmp);
+
+    return cur_time;
 }
