@@ -81,6 +81,13 @@ char *get_ipv6_addr(uint8_t buffer[])
         msg_idx++;
     }
 
+    // Check if response contains answer
+    int ans_start = msg_idx += 5;
+    if ((int)buffer[ans_start + 1] != 12)
+    {
+        return NULL;
+    }
+
     // Skip qtype and other irrelevant information
     msg_idx += 17;
 
@@ -123,6 +130,7 @@ void write_log(int qr, char *qname, int qtype, char *ipv6_addr)
         exit(1);
     }
 
+    // Log request
     if (qr == 0)
     {
         fprintf(log_file, "%s requested %s\n", cur_time, qname);
@@ -133,9 +141,13 @@ void write_log(int qr, char *qname, int qtype, char *ipv6_addr)
             fflush(log_file);
         }
     }
+    // Log response
     else
     {
-        fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
-        fflush(log_file);
+        if (ipv6_addr)
+        {
+            fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
+            fflush(log_file);
+        }
     }
 }
