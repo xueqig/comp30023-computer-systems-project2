@@ -52,6 +52,13 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
         // Bind address to the socket
+        int enable = 1;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+        {
+            perror("setsockopt");
+            exit(1);
+        }
+
         if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0)
         {
             perror("bind");
