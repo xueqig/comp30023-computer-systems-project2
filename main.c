@@ -95,6 +95,7 @@ int main(int argc, char *argv[])
     printf("qr: %d\n", qr);
     printf("qname: %s\n", qname);
     printf("qtype: %d\n", qtype);
+    write_log(qr, qname, qtype, NULL);
 
     /////////////////////////////////////////////////////////////////
     // Act as a client to query upperstream server
@@ -110,10 +111,12 @@ int main(int argc, char *argv[])
     int res_qr = get_qr(res_buf);
     char *res_qname = get_qname(res_buf);
     int res_qtype = get_qtype(res_buf);
+    char *res_ipv6_addr = get_ipv6_addr(res_buf);
 
     printf("res qr: %d\n", res_qr);
     printf("res qname: %s\n", res_qname);
     printf("res qtype: %d\n", res_qtype);
+    write_log(res_qr, res_qname, res_qtype, res_ipv6_addr);
 
     //////////////////////////////////////////////////////////////////
     // Write message back
