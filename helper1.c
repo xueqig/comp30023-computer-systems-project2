@@ -82,7 +82,7 @@ char *get_ipv6_addr(uint8_t buffer[])
     }
 
     // Check if response contains answer
-    if ((int)buffer[msg_idx + 5] != 12)
+    if ((int)buffer[msg_idx + 6] != 12)
     {
         return NULL;
     }
@@ -143,7 +143,10 @@ void write_log(int qr, char *qname, int qtype, char *ipv6_addr)
     // Log response
     else
     {
-        fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
-        fflush(log_file);
+        if (ipv6_addr)
+        {
+            fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
+            fflush(log_file);
+        }
     }
 }
