@@ -143,10 +143,7 @@ void write_log(int qr, char *qname, int qtype, char *ipv6_addr)
     // Log response
     else
     {
-        if (ipv6_addr)
-        {
-            fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
-            fflush(log_file);
-        }
+        fprintf(log_file, "%s %s is at %s\n", cur_time, qname, ipv6_addr);
+        fflush(log_file);
     }
 }
