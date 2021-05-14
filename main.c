@@ -95,6 +95,14 @@ int main(int argc, char *argv[])
         // Null-terminate string
         req_buf[n] = '\0';
 
+        int i;
+        printf("req buf: \n");
+        for (i = 0; i < n; i++)
+        {
+            printf("%02x ", req_buf[i]);
+        }
+        printf("\n");
+
         int qr = get_qr(req_buf);
         char *qname = get_qname(req_buf);
         int qtype = get_qtype(req_buf);
