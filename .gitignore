@@ -6,8 +6,3 @@ dns_svr
 dns_svr.dSYM
 helper1.o
 vgcore.*
-
-command
-command.c
-command1
-command1.c
