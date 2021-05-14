@@ -5,6 +5,10 @@
 #include <arpa/inet.h>
 #include <time.h>
 
+#define QN_START 14
+#define AAAA_ID 28
+#define IPV6_LEN 40
+
 int get_qr(uint8_t buffer[])
 {
     // extract request or response
@@ -22,10 +26,12 @@ int get_qr(uint8_t buffer[])
 
 char *get_qname(uint8_t buffer[])
 {
-    // extract domain name
+    // Extract domain name
     char *qname;
-    int msg_idx = 14;
     int qname_idx = 0;
+
+    // Skip length field and header
+    int msg_idx = QN_START;
 
     int tot_len = 0;
     qname = (char *)malloc(tot_len);
@@ -50,14 +56,15 @@ char *get_qname(uint8_t buffer[])
 
 int get_qtype(uint8_t buffer[])
 {
-    int msg_idx = 14;
+    // Skip length field and header
+    int msg_idx = QN_START;
 
-    // Skip header and qname of the message
+    // Skip qname of the message
     while ((int)buffer[msg_idx] != 0)
     {
         msg_idx++;
     }
-    // extract qtype
+    // Extract qtype
     msg_idx += 2;
     int qtype = buffer[msg_idx];
 
@@ -66,7 +73,7 @@ int get_qtype(uint8_t buffer[])
 
 char *get_ipv6_addr(uint8_t buffer[])
 {
-    int msg_idx = 14;
+    int msg_idx = QN_START;
 
     // Skip header and qname of the message
     while ((int)buffer[msg_idx] != 0)
@@ -84,8 +91,8 @@ char *get_ipv6_addr(uint8_t buffer[])
         addr[i] = buffer[msg_idx++];
     }
 
-    static char ipv6_addr[40];
-    inet_ntop(AF_INET6, addr, ipv6_addr, 40);
+    static char ipv6_addr[IPV6_LEN];
+    inet_ntop(AF_INET6, addr, ipv6_addr, IPV6_LEN);
 
     return ipv6_addr;
 }
@@ -120,7 +127,7 @@ void write_log(int qr, char *qname, int qtype, char *ipv6_addr)
     {
         fprintf(log_file, "%s requested %s\n", cur_time, qname);
         fflush(log_file);
-        if (qtype != 28)
+        if (qtype != AAAA_ID)
         {
             fprintf(log_file, "%s unimplemented request\n", cur_time);
             fflush(log_file);

@@ -204,7 +204,13 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     // Null-terminate string
     buffer[*res_buf_len] = '\0';
 
-    printf("n: %d\n", *res_buf_len);
+    printf("res from upstream server n: %d\n", *res_buf_len);
+    int i;
+    for (i = 0; i < *res_buf_len; i++)
+    {
+        printf("%02x ", buffer[i]);
+    }
+    printf("\n");
 
     close(sockfd);
 
