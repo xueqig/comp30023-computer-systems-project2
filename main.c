@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
             }
             if (req_buf_idx < (int)req_buf[1] + 2)
             {
+                printf("total length: %d\n", (int)req_buf[1]);
                 n = read(newsockfd, buf, 255); // n is number of characters read
                 if (n < 0)
                 {
