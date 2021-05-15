@@ -7,6 +7,8 @@
 #include <signal.h>
 #include "helper1.h"
 
+#define AAAA_ID 28
+
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 void handle_sigint(int sig);
 
@@ -17,17 +19,11 @@ int main(int argc, char *argv[])
     while (1)
     {
         // Act as a server to accept query from client (dig)
-        int sockfd, newsockfd, n, re, s;
-        uint8_t req_buf[256];
+        int sockfd, newsockfd, n, re, s, i;
+        uint8_t req_buf[256], buf[256];
         struct addrinfo hints, *res;
         struct sockaddr_storage client_addr;
         socklen_t client_addr_size;
-
-        // if (argc < 2)
-        // {
-        //     fprintf(stderr, "ERROR, no port provided\n");
-        //     exit(EXIT_FAILURE);
-        // }
 
         // Create address we're going to listen on (with given port number)
         memset(&hints, 0, sizeof hints);
@@ -58,6 +54,13 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
         // Bind address to the socket
+        int enable = 1;
+        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+        {
+            perror("setsockopt");
+            exit(1);
+        }
+
         if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0)
         {
             perror("bind");
@@ -85,14 +88,46 @@ int main(int argc, char *argv[])
         }
 
         // Read characters from the connection, then process
-        n = read(newsockfd, req_buf, 255); // n is number of characters read
+        n = read(newsockfd, buf, 255); // n is number of characters read
         if (n < 0)
         {
             perror("read");
             exit(EXIT_FAILURE);
         }
+
+        // Continue reading until receive whole request
+        int req_buf_idx = 0;
+        while (1)
+        {
+            for (i = 0; i < n; i++)
+            {
+                req_buf[req_buf_idx++] = buf[i];
+            }
+            if (req_buf_idx < (int)req_buf[1] + 2)
+            {
+                printf("total length: %d\n", (int)req_buf[1]);
+                n = read(newsockfd, buf, 255); // n is number of characters read
+                if (n < 0)
+                {
+                    perror("read");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+
         // Null-terminate string
-        req_buf[n] = '\0';
+        req_buf[req_buf_idx] = '\0';
+
+        printf("req buf: \n");
+        for (i = 0; i < n; i++)
+        {
+            printf("%02x ", req_buf[i]);
+        }
+        printf("\n");
 
         int qr = get_qr(req_buf);
         char *qname = get_qname(req_buf);
@@ -102,6 +137,48 @@ int main(int argc, char *argv[])
         printf("qname: %s\n", qname);
         printf("qtype: %d\n", qtype);
         write_log(qr, qname, qtype, NULL);
+
+        // Check if request is AAAA
+        if (qtype != AAAA_ID)
+        {
+            // Send request back to dig
+
+            // Change qr to 0
+            char qr_str[3];
+            sprintf(qr_str, "%02x", req_buf[4]);
+            qr_str[0] = '8';
+            uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
+            req_buf[4] = new_qr;
+
+            // Change ra to 1 and rcode to 4
+            char ra_rcode_str[3];
+            sprintf(ra_rcode_str, "%02x", req_buf[5]);
+            ra_rcode_str[0] = '8';
+            ra_rcode_str[1] = '4';
+            uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
+            req_buf[5] = new_ra_rcode;
+
+            printf("new req buf: \n");
+            for (i = 0; i < n; i++)
+            {
+                printf("%02x ", req_buf[i]);
+            }
+            printf("\n");
+
+            // Write message back
+            n = write(newsockfd, req_buf, n);
+            if (n < 0)
+            {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+
+            printf("after write\n");
+
+            close(sockfd);
+            close(newsockfd);
+            continue;
+        }
 
         /////////////////////////////////////////////////////////////////
         // Act as a client to query upperstream server
@@ -148,12 +225,6 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     struct addrinfo hints, *servinfo, *rp;
     // char buffer[256];
 
-    // if (argc < 3)
-    // {
-    //     fprintf(stderr, "usage %s hostname port\n", argv[0]);
-    //     exit(EXIT_FAILURE);
-    // }
-
     // Create address
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_INET;
@@ -162,7 +233,6 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     // Get addrinfo of server. From man page:
     // The getaddrinfo() function combines the functionality provided by the
     // gethostbyname(3) and getservbyname(3) functions into a single interface
-    // // argv[1] is my ip address, argv[2] is port
     s = getaddrinfo(node, service, &hints, &servinfo);
     if (s != 0)
     {
@@ -210,7 +280,13 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     // Null-terminate string
     buffer[*res_buf_len] = '\0';
 
-    printf("n: %d\n", *res_buf_len);
+    printf("res from upstream server n: %d\n", *res_buf_len);
+    int i;
+    for (i = 0; i < *res_buf_len; i++)
+    {
+        printf("%02x ", buffer[i]);
+    }
+    printf("\n");
 
     close(sockfd);
 
