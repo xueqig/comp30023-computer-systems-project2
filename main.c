@@ -119,19 +119,20 @@ int main(int argc, char *argv[])
         {
             // Send request back to dig
 
-            // Change rcode to 4
-            char rcode_str[3];
-            sprintf(rcode_str, "%02x", req_buf[5]);
-            rcode_str[1] = '4';
-            uint8_t rcode = (int)strtol(rcode_str, NULL, 16);
-            req_buf[5] = rcode;
-
             // Change qr to 0
             char qr_str[3];
             sprintf(qr_str, "%02x", req_buf[4]);
             qr_str[0] = '8';
             uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
             req_buf[4] = new_qr;
+
+            // Change rcode to 4
+            char rcode_str[3];
+            sprintf(rcode_str, "%02x", req_buf[5]);
+            rcode_str[0] = '8';
+            rcode_str[1] = '4';
+            uint8_t rcode = (int)strtol(rcode_str, NULL, 16);
+            req_buf[5] = rcode;
 
             printf("new req buf: \n");
             for (i = 0; i < n; i++)
