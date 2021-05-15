@@ -126,13 +126,13 @@ int main(int argc, char *argv[])
             uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
             req_buf[4] = new_qr;
 
-            // Change rcode to 4
-            char rcode_str[3];
-            sprintf(rcode_str, "%02x", req_buf[5]);
-            rcode_str[0] = '8';
-            rcode_str[1] = '4';
-            uint8_t rcode = (int)strtol(rcode_str, NULL, 16);
-            req_buf[5] = rcode;
+            // Change ra to 1 and rcode to 4
+            char ra_rcode_str[3];
+            sprintf(ra_rcode_str, "%02x", req_buf[5]);
+            ra_rcode_str[0] = '8';
+            ra_rcode_str[1] = '4';
+            uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
+            req_buf[5] = new_ra_rcode;
 
             printf("new req buf: \n");
             for (i = 0; i < n; i++)
