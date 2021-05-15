@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
         }
 
         // Null-terminate string
-        req_buf[n] = '\0';
+        req_buf[req_buf_idx] = '\0';
 
         printf("req buf: \n");
         for (i = 0; i < n; i++)
