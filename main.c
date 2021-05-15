@@ -94,6 +94,8 @@ int main(int argc, char *argv[])
             perror("read");
             exit(EXIT_FAILURE);
         }
+
+        // Continue reading until receive whole request
         int req_buf_idx = 0;
         while (1)
         {
