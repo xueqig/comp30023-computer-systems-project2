@@ -7,6 +7,8 @@
 #include <signal.h>
 #include "helper1.h"
 
+#define AAAA_ID 28
+
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 void handle_sigint(int sig);
 
@@ -111,6 +113,47 @@ int main(int argc, char *argv[])
         printf("qname: %s\n", qname);
         printf("qtype: %d\n", qtype);
         write_log(qr, qname, qtype, NULL);
+
+        // Check if request is AAAA
+        if (qtype != AAAA_ID)
+        {
+            // Send request back to dig
+
+            // Change rcode to 4
+            char rcode_str[3];
+            sprintf(rcode_str, "%02x", req_buf[5]);
+            rcode_str[1] = '4';
+            uint8_t rcode = (int)strtol(rcode_str, NULL, 16);
+            req_buf[5] = rcode;
+
+            // Change qr to 0
+            char qr_str[3];
+            sprintf(qr_str, "%02x", req_buf[4]);
+            qr_str[0] = '8';
+            uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
+            req_buf[4] = new_qr;
+
+            printf("new req buf: \n");
+            for (i = 0; i < n; i++)
+            {
+                printf("%02x ", req_buf[i]);
+            }
+            printf("\n");
+
+            // Write message back
+            n = write(newsockfd, req_buf, n);
+            if (n < 0)
+            {
+                perror("write");
+                exit(EXIT_FAILURE);
+            }
+
+            printf("after write\n");
+
+            close(sockfd);
+            close(newsockfd);
+            continue;
+        }
 
         /////////////////////////////////////////////////////////////////
         // Act as a client to query upperstream server
