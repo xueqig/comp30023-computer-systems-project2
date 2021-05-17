@@ -11,6 +11,7 @@
 
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 void handle_sigint(int sig);
+int get_query_len(uint8_t *query_buf);
 
 int main(int argc, char *argv[])
 {
@@ -95,7 +96,8 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-        int req_buf_len = (int)req_buf[0] + (int)req_buf[1] + 2;
+        int req_buf_len = get_query_len(req_buf);
+        printf("query len: %d\n", req_buf_len);
 
         while (n != req_buf_len)
         {
@@ -205,6 +207,16 @@ int main(int argc, char *argv[])
         close(newsockfd);
     }
     return 0;
+}
+
+int get_query_len(uint8_t *query_buf)
+{
+    int query_len = 0;
+    uint8_t len_buf[2];
+    len_buf[0] = query_buf[0];
+    len_buf[1] = query_buf[1];
+    query_len = (len_buf[0] << 8) | (len_buf[1]);
+    return query_len + 2;
 }
 
 // send query to upstream server and return an response
