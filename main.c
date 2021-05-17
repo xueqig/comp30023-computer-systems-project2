@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     {
         // Act as a server to accept query from client (dig)
         int sockfd, newsockfd, n, re, s, i;
-        uint8_t req_buf[2048], buf[2048];
+        uint8_t req_buf[2048];
         struct addrinfo hints, *res;
         struct sockaddr_storage client_addr;
         socklen_t client_addr_size;
@@ -97,7 +97,6 @@ int main(int argc, char *argv[])
         }
 
         int req_buf_len = get_query_len(req_buf);
-        printf("query len: %d\n", req_buf_len);
 
         while (n != req_buf_len)
         {
