@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
         while (n != req_buf_len)
         {
-            n += read(newsockfd, req_buf, 2047);
+            n += read(newsockfd, req_buf + n, 2047);
 
             if (n < 0)
             {
