@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-        int req_buf_len = (int)req_buf[1] + 2;
+        int req_buf_len = (int)req_buf[0] + (int)req_buf[1] + 2;
 
         while (n != req_buf_len)
         {
