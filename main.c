@@ -94,50 +94,6 @@ int main(int argc, char *argv[])
             perror("read");
             exit(EXIT_FAILURE);
         }
-
-        int req_buf_len = (int)req_buf[1];
-
-        while (n != req_buf_len)
-        {
-            n += read(newsockfd, buf + n, 255);
-
-            if (n == 0)
-            {
-                close(newsockfd);
-                continue;
-            }
-
-            if (n < 0)
-            {
-                perror("read");
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        // // Continue reading until receive whole request
-        // int req_buf_idx = 0;
-        // while (1)
-        // {
-        //     for (i = 0; i < n; i++)
-        //     {
-        //         req_buf[req_buf_idx++] = buf[i];
-        //     }
-        //     if (req_buf_idx < (int)req_buf[1] + 2)
-        //     {
-        //         printf("total length: %d\n", (int)req_buf[1]);
-        //         n = read(newsockfd, buf, 255); // n is number of characters read
-        //         if (n < 0)
-        //         {
-        //             perror("read");
-        //             exit(EXIT_FAILURE);
-        //         }
-        //     }
-        //     else
-        //     {
-        //         break;
-        //     }
-        // }
-
         // Null-terminate string
         req_buf[n] = '\0';
 
