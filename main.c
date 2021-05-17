@@ -94,6 +94,20 @@ int main(int argc, char *argv[])
             perror("read");
             exit(EXIT_FAILURE);
         }
+
+        int req_buf_len = (int)req_buf[1] + 2;
+
+        while (n != req_buf_len)
+        {
+            n += read(newsockfd, req_buf, 255);
+
+            if (n < 0)
+            {
+                perror("read");
+                exit(EXIT_FAILURE);
+            }
+        }
+
         // Null-terminate string
         req_buf[n] = '\0';
 
