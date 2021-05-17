@@ -103,6 +103,11 @@ int main(int argc, char *argv[])
         {
             n += read(newsockfd, req_buf, 255);
 
+            if (n == 0)
+            {
+                continue;
+            }
+
             if (n < 0)
             {
                 perror("read");
