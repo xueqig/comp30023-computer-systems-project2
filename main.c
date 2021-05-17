@@ -100,6 +100,12 @@ int main(int argc, char *argv[])
         while (n != req_buf_len)
         {
             n += read(newsockfd, buf + n, 255);
+
+            if (n < 0)
+            {
+                perror("read");
+                exit(EXIT_FAILURE);
+            }
         }
 
         // // Continue reading until receive whole request
