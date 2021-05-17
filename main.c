@@ -11,6 +11,7 @@
 
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 void handle_sigint(int sig);
+int get_query_len(uint8_t *query_buf);
 
 int main(int argc, char *argv[])
 {
@@ -20,7 +21,7 @@ int main(int argc, char *argv[])
     {
         // Act as a server to accept query from client (dig)
         int sockfd, newsockfd, n, re, s, i;
-        uint8_t req_buf[256], buf[256];
+        uint8_t req_buf[2048];
         struct addrinfo hints, *res;
         struct sockaddr_storage client_addr;
         socklen_t client_addr_size;
@@ -88,39 +89,28 @@ int main(int argc, char *argv[])
         }
 
         // Read characters from the connection, then process
-        n = read(newsockfd, buf, 255); // n is number of characters read
+        n = read(newsockfd, req_buf, 2047); // n is number of characters read
         if (n < 0)
         {
             perror("read");
             exit(EXIT_FAILURE);
         }
 
-        // Continue reading until receive whole request
-        int req_buf_idx = 0;
-        while (1)
+        int req_buf_len = get_query_len(req_buf);
+
+        while (n != req_buf_len)
         {
-            for (i = 0; i < n; i++)
+            n += read(newsockfd, req_buf + n, 2047);
+
+            if (n < 0)
             {
-                req_buf[req_buf_idx++] = buf[i];
-            }
-            if (req_buf_idx < (int)req_buf[1] + 2)
-            {
-                printf("total length: %d\n", (int)req_buf[1]);
-                n = read(newsockfd, buf, 255); // n is number of characters read
-                if (n < 0)
-                {
-                    perror("read");
-                    exit(EXIT_FAILURE);
-                }
-            }
-            else
-            {
-                break;
+                perror("read");
+                exit(EXIT_FAILURE);
             }
         }
 
         // Null-terminate string
-        req_buf[req_buf_idx] = '\0';
+        req_buf[n] = '\0';
 
         printf("req buf: \n");
         for (i = 0; i < n; i++)
@@ -218,12 +208,22 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+int get_query_len(uint8_t *query_buf)
+{
+    int query_len = 0;
+    uint8_t len_buf[2];
+    len_buf[0] = query_buf[0];
+    len_buf[1] = query_buf[1];
+    query_len = (len_buf[0] << 8) | (len_buf[1]);
+    return query_len + 2;
+}
+
 // send query to upstream server and return an response
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len)
 {
     int sockfd, n, s;
     struct addrinfo hints, *servinfo, *rp;
-    // char buffer[256];
+    // char buffer[2048];
 
     // Create address
     memset(&hints, 0, sizeof hints);
@@ -271,7 +271,7 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     }
 
     // Read message from server
-    *res_buf_len = read(sockfd, buffer, 255);
+    *res_buf_len = read(sockfd, buffer, 2047);
     if (*res_buf_len < 0)
     {
         perror("read");
