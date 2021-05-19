@@ -120,7 +120,7 @@ void handle_non_AAAA_req(int *newsockfd, uint8_t *req_buf, int req_buf_len)
     req_buf[5] = new_ra_rcode;
 
     // Write message back
-    respond_client(newsockfd, req_buf, req_buf_len);
+    respond_client(*newsockfd, req_buf, req_buf_len);
 }
 
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
