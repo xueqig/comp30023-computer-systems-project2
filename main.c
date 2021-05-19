@@ -158,14 +158,6 @@ int main(int argc, char *argv[])
 
             // Write message back
             respond_client(newsockfd, req_buf, n);
-            // n = write(newsockfd, req_buf, n);
-            // if (n < 0)
-            // {
-            //     perror("write");
-            //     exit(EXIT_FAILURE);
-            // }
-
-            // printf("after write\n");
 
             close(sockfd);
             close(newsockfd);
