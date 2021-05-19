@@ -220,6 +220,7 @@ int get_query_len(uint8_t *query_buf)
     return query_len + 2;
 }
 
+// Send response back to client
 void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len)
 {
     int n = write(newsockfd, res_buf, res_buf_len);
