@@ -13,6 +13,7 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
 void handle_sigint(int sig);
 int get_query_len(uint8_t *query_buf);
 void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len);
+int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf);
 
 int main(int argc, char *argv[])
 {
@@ -21,104 +22,105 @@ int main(int argc, char *argv[])
     while (1)
     {
         // Act as a server to accept query from client (dig)
-        int sockfd, newsockfd, n, re, s, i;
+        int sockfd, newsockfd, req_buf_len;
         uint8_t req_buf[2048];
-        struct addrinfo hints, *res;
-        struct sockaddr_storage client_addr;
-        socklen_t client_addr_size;
+        req_buf_len = accept_request(&sockfd, &newsockfd, req_buf);
+        // struct addrinfo hints, *res;
+        // struct sockaddr_storage client_addr;
+        // socklen_t client_addr_size;
 
-        // Create address we're going to listen on (with given port number)
-        memset(&hints, 0, sizeof hints);
-        hints.ai_family = AF_INET;       // IPv4
-        hints.ai_socktype = SOCK_STREAM; // TCP
-        hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
-        // node (NULL means any interface), service (port), hints, res
-        s = getaddrinfo(NULL, "8053", &hints, &res);
-        if (s != 0)
-        {
-            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
-            exit(EXIT_FAILURE);
-        }
+        // // Create address we're going to listen on (with given port number)
+        // memset(&hints, 0, sizeof hints);
+        // hints.ai_family = AF_INET;       // IPv4
+        // hints.ai_socktype = SOCK_STREAM; // TCP
+        // hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
+        // // node (NULL means any interface), service (port), hints, res
+        // s = getaddrinfo(NULL, "8053", &hints, &res);
+        // if (s != 0)
+        // {
+        //     fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+        //     exit(EXIT_FAILURE);
+        // }
 
-        // Create socket
-        sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-        if (sockfd < 0)
-        {
-            perror("socket");
-            exit(EXIT_FAILURE);
-        }
+        // // Create socket
+        // sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+        // if (sockfd < 0)
+        // {
+        //     perror("socket");
+        //     exit(EXIT_FAILURE);
+        // }
 
-        // Reuse port if possible
-        re = 1;
-        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &re, sizeof(int)) < 0)
-        {
-            perror("setsockopt");
-            exit(EXIT_FAILURE);
-        }
-        // Bind address to the socket
-        int enable = 1;
-        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-        {
-            perror("setsockopt");
-            exit(1);
-        }
+        // // Reuse port if possible
+        // re = 1;
+        // if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &re, sizeof(int)) < 0)
+        // {
+        //     perror("setsockopt");
+        //     exit(EXIT_FAILURE);
+        // }
+        // // Bind address to the socket
+        // int enable = 1;
+        // if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+        // {
+        //     perror("setsockopt");
+        //     exit(1);
+        // }
 
-        if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0)
-        {
-            perror("bind");
-            exit(EXIT_FAILURE);
-        }
-        freeaddrinfo(res);
+        // if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0)
+        // {
+        //     perror("bind");
+        //     exit(EXIT_FAILURE);
+        // }
+        // freeaddrinfo(res);
 
-        // Listen on socket - means we're ready to accept connections,
-        // incoming connection requests will be queued, man 3 listen
-        if (listen(sockfd, 5) < 0)
-        {
-            perror("listen");
-            exit(EXIT_FAILURE);
-        }
+        // // Listen on socket - means we're ready to accept connections,
+        // // incoming connection requests will be queued, man 3 listen
+        // if (listen(sockfd, 5) < 0)
+        // {
+        //     perror("listen");
+        //     exit(EXIT_FAILURE);
+        // }
 
-        // Accept a connection - blocks until a connection is ready to be accepted
-        // Get back a new file descriptor to communicate on
-        client_addr_size = sizeof client_addr;
-        newsockfd =
-            accept(sockfd, (struct sockaddr *)&client_addr, &client_addr_size);
-        if (newsockfd < 0)
-        {
-            perror("accept");
-            exit(EXIT_FAILURE);
-        }
+        // // Accept a connection - blocks until a connection is ready to be accepted
+        // // Get back a new file descriptor to communicate on
+        // client_addr_size = sizeof client_addr;
+        // newsockfd =
+        //     accept(sockfd, (struct sockaddr *)&client_addr, &client_addr_size);
+        // if (newsockfd < 0)
+        // {
+        //     perror("accept");
+        //     exit(EXIT_FAILURE);
+        // }
 
-        // Read characters from the connection, then process
-        n = read(newsockfd, req_buf, 2047); // n is number of characters read
-        if (n < 0)
-        {
-            perror("read");
-            exit(EXIT_FAILURE);
-        }
+        // // Read characters from the connection, then process
+        // n = read(newsockfd, req_buf, 2047); // n is number of characters read
+        // if (n < 0)
+        // {
+        //     perror("read");
+        //     exit(EXIT_FAILURE);
+        // }
 
-        int req_buf_len = get_query_len(req_buf);
+        // int req_buf_len = get_query_len(req_buf);
 
-        while (n != req_buf_len)
-        {
-            n += read(newsockfd, req_buf + n, 2047);
+        // while (n != req_buf_len)
+        // {
+        //     n += read(newsockfd, req_buf + n, 2047);
 
-            if (n < 0)
-            {
-                perror("read");
-                exit(EXIT_FAILURE);
-            }
-        }
+        //     if (n < 0)
+        //     {
+        //         perror("read");
+        //         exit(EXIT_FAILURE);
+        //     }
+        // }
 
-        // Null-terminate string
-        req_buf[n] = '\0';
+        // // Null-terminate string
+        // req_buf[n] = '\0';
 
-        printf("req buf: \n");
-        for (i = 0; i < n; i++)
-        {
-            printf("%02x ", req_buf[i]);
-        }
-        printf("\n");
+        // printf("req buf: \n");
+        // for (i = 0; i < n; i++)
+        // {
+        //     printf("%02x ", req_buf[i]);
+        // }
+        // printf("\n");
 
         int qr = get_qr(req_buf);
         char *qname = get_qname(req_buf);
@@ -150,14 +152,15 @@ int main(int argc, char *argv[])
             req_buf[5] = new_ra_rcode;
 
             printf("new req buf: \n");
-            for (i = 0; i < n; i++)
+            int i;
+            for (i = 0; i < req_buf_len; i++)
             {
                 printf("%02x ", req_buf[i]);
             }
             printf("\n");
 
             // Write message back
-            respond_client(newsockfd, req_buf, n);
+            respond_client(newsockfd, req_buf, req_buf_len);
 
             close(sockfd);
             close(newsockfd);
@@ -173,7 +176,7 @@ int main(int argc, char *argv[])
 
         uint8_t *res_buf;
         int res_buf_len;
-        res_buf = query_server(us_svr_ip, us_svr_port, req_buf, n, &res_buf_len);
+        res_buf = query_server(us_svr_ip, us_svr_port, req_buf, req_buf_len, &res_buf_len);
 
         int res_qr = get_qr(res_buf);
         char *res_qname = get_qname(res_buf);
@@ -203,6 +206,109 @@ int get_query_len(uint8_t *query_buf)
     len_buf[1] = query_buf[1];
     query_len = (len_buf[0] << 8) | (len_buf[1]);
     return query_len + 2;
+}
+
+int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
+{
+    int n, re, s, i;
+    struct addrinfo hints, *res;
+    struct sockaddr_storage client_addr;
+    socklen_t client_addr_size;
+
+    // Create address we're going to listen on (with given port number)
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;       // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP
+    hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
+    // node (NULL means any interface), service (port), hints, res
+    s = getaddrinfo(NULL, "8053", &hints, &res);
+    if (s != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+        exit(EXIT_FAILURE);
+    }
+
+    // Create socket
+    *sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (*sockfd < 0)
+    {
+        perror("socket");
+        exit(EXIT_FAILURE);
+    }
+
+    // Reuse port if possible
+    re = 1;
+    if (setsockopt(*sockfd, SOL_SOCKET, SO_REUSEADDR, &re, sizeof(int)) < 0)
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+    // Bind address to the socket
+    int enable = 1;
+    if (setsockopt(*sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    {
+        perror("setsockopt");
+        exit(1);
+    }
+
+    if (bind(*sockfd, res->ai_addr, res->ai_addrlen) < 0)
+    {
+        perror("bind");
+        exit(EXIT_FAILURE);
+    }
+    freeaddrinfo(res);
+
+    // Listen on socket - means we're ready to accept connections,
+    // incoming connection requests will be queued, man 3 listen
+    if (listen(*sockfd, 5) < 0)
+    {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    // Accept a connection - blocks until a connection is ready to be accepted
+    // Get back a new file descriptor to communicate on
+    client_addr_size = sizeof client_addr;
+    *newsockfd =
+        accept(*sockfd, (struct sockaddr *)&client_addr, &client_addr_size);
+    if (*newsockfd < 0)
+    {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read characters from the connection, then process
+    n = read(*newsockfd, req_buf, 2047); // n is number of characters read
+    if (n < 0)
+    {
+        perror("read");
+        exit(EXIT_FAILURE);
+    }
+
+    int req_buf_len = get_query_len(req_buf);
+
+    while (n != req_buf_len)
+    {
+        n += read(*newsockfd, req_buf + n, 2047);
+
+        if (n < 0)
+        {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Null-terminate string
+    req_buf[n] = '\0';
+
+    printf("req buf: \n");
+    for (i = 0; i < n; i++)
+    {
+        printf("%02x ", req_buf[i]);
+    }
+    printf("\n");
+
+    return n;
 }
 
 // Send response back to dig (client)
