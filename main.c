@@ -12,6 +12,7 @@
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 void handle_sigint(int sig);
 int get_query_len(uint8_t *query_buf);
+void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len);
 
 int main(int argc, char *argv[])
 {
@@ -193,14 +194,15 @@ int main(int argc, char *argv[])
 
         //////////////////////////////////////////////////////////////////
         // Write message back
-        n = write(newsockfd, res_buf, res_buf_len);
-        if (n < 0)
-        {
-            perror("write");
-            exit(EXIT_FAILURE);
-        }
+        respond_client(newsockfd, res_buf, res_buf_len);
+        // n = write(newsockfd, res_buf, res_buf_len);
+        // if (n < 0)
+        // {
+        //     perror("write");
+        //     exit(EXIT_FAILURE);
+        // }
 
-        printf("after write\n");
+        // printf("after write\n");
 
         close(sockfd);
         close(newsockfd);
@@ -216,6 +218,18 @@ int get_query_len(uint8_t *query_buf)
     len_buf[1] = query_buf[1];
     query_len = (len_buf[0] << 8) | (len_buf[1]);
     return query_len + 2;
+}
+
+void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len)
+{
+    int n = write(newsockfd, res_buf, res_buf_len);
+    if (n < 0)
+    {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("after write\n");
 }
 
 // send query to upstream server and return an response
