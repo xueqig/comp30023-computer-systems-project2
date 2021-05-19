@@ -6,10 +6,12 @@
 #include <time.h>
 #include "helper1.h"
 
+#define BUF_SIZE 1024
+
 int main(int argc, char *argv[])
 {
     // Read from stdin
-    uint8_t buffer[200];
+    uint8_t buffer[BUF_SIZE];
     size_t nbytes;
 
     nbytes = sizeof(buffer);
@@ -17,16 +19,9 @@ int main(int argc, char *argv[])
 
     // Extract useful information
     int qr = get_qr(buffer);
-    printf("qr: %d\n", qr);
-
     char *qname = get_qname(buffer);
-    printf("qname: %s\n", qname);
-
     int qtype = get_qtype(buffer);
-    printf("qtype: %d\n", qtype);
-
     char *ipv6_addr = get_ipv6_addr(buffer);
-    printf("ipv6_addr: %s\n", ipv6_addr);
 
     write_log(qr, qname, qtype, ipv6_addr);
 }
