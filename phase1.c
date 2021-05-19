@@ -6,10 +6,12 @@
 #include <time.h>
 #include "helper1.h"
 
+#define BUF_SIZE 1024
+
 int main(int argc, char *argv[])
 {
     // Read from stdin
-    uint8_t buffer[200];
+    uint8_t buffer[BUF_SIZE];
     size_t nbytes;
 
     nbytes = sizeof(buffer);

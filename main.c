@@ -9,6 +9,7 @@
 
 #define AAAA_ID 28
 #define PORT "8053"
+#define BUF_SIZE 1024
 
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 void handle_sigint(int sig);
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
     {
         // Act as a server to accept request from client (dig)
         int sockfd, newsockfd, req_buf_len;
-        uint8_t req_buf[2048];
+        uint8_t req_buf[BUF_SIZE];
         req_buf_len = accept_request(&sockfd, &newsockfd, req_buf);
 
         int qr = get_qr(req_buf);
@@ -183,7 +184,7 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
     }
 
     // Read characters from the connection, then process
-    bytes_read = read(*newsockfd, req_buf, 2047); // n is number of characters read
+    bytes_read = read(*newsockfd, req_buf, BUF_SIZE - 1); // n is number of characters read
     if (bytes_read < 0)
     {
         perror("read");
@@ -194,7 +195,7 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
 
     while (bytes_read != req_buf_len)
     {
-        bytes_read += read(*newsockfd, req_buf + bytes_read, 2047);
+        bytes_read += read(*newsockfd, req_buf + bytes_read, BUF_SIZE - 1);
 
         if (bytes_read < 0)
         {
@@ -234,7 +235,7 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
 {
     int sockfd, n, s;
     struct addrinfo hints, *servinfo, *rp;
-    // char buffer[2048];
+    // char buffer[BUF_SIZE];
 
     // Create address
     memset(&hints, 0, sizeof hints);
@@ -282,7 +283,7 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     }
 
     // Read message from server
-    *res_buf_len = read(sockfd, buffer, 2047);
+    *res_buf_len = read(sockfd, buffer, BUF_SIZE - 1);
     if (*res_buf_len < 0)
     {
         perror("read");
