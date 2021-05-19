@@ -195,14 +195,6 @@ int main(int argc, char *argv[])
         //////////////////////////////////////////////////////////////////
         // Write message back
         respond_client(newsockfd, res_buf, res_buf_len);
-        // n = write(newsockfd, res_buf, res_buf_len);
-        // if (n < 0)
-        // {
-        //     perror("write");
-        //     exit(EXIT_FAILURE);
-        // }
-
-        // printf("after write\n");
 
         close(sockfd);
         close(newsockfd);
@@ -220,7 +212,7 @@ int get_query_len(uint8_t *query_buf)
     return query_len + 2;
 }
 
-// Send response back to client
+// Send response back to dig (client)
 void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len)
 {
     int n = write(newsockfd, res_buf, res_buf_len);
