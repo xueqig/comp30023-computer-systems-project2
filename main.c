@@ -16,6 +16,7 @@ void handle_sigint(int sig);
 int get_req_len(uint8_t *query_buf);
 void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len);
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf);
+void handle_non_AAAA_req(int *newsockfd, uint8_t *req_buf, int req_buf_len);
 
 int main(int argc, char *argv[])
 {
@@ -37,25 +38,26 @@ int main(int argc, char *argv[])
         // Check if request is AAAA
         if (qtype != AAAA_ID)
         {
-            // Send request back to dig
+            handle_non_AAAA_req(&newsockfd, req_buf, req_buf_len);
+            // // Send request back to dig
 
-            // Change qr to 0
-            char qr_str[3];
-            sprintf(qr_str, "%02x", req_buf[4]);
-            qr_str[0] = '8';
-            uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
-            req_buf[4] = new_qr;
+            // // Change qr to 0
+            // char qr_str[3];
+            // sprintf(qr_str, "%02x", req_buf[4]);
+            // qr_str[0] = '8';
+            // uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
+            // req_buf[4] = new_qr;
 
-            // Change ra to 1 and rcode to 4
-            char ra_rcode_str[3];
-            sprintf(ra_rcode_str, "%02x", req_buf[5]);
-            ra_rcode_str[0] = '8';
-            ra_rcode_str[1] = '4';
-            uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
-            req_buf[5] = new_ra_rcode;
+            // // Change ra to 1 and rcode to 4
+            // char ra_rcode_str[3];
+            // sprintf(ra_rcode_str, "%02x", req_buf[5]);
+            // ra_rcode_str[0] = '8';
+            // ra_rcode_str[1] = '4';
+            // uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
+            // req_buf[5] = new_ra_rcode;
 
-            // Write message back
-            respond_client(newsockfd, req_buf, req_buf_len);
+            // // Write message back
+            // respond_client(newsockfd, req_buf, req_buf_len);
 
             close(sockfd);
             close(newsockfd);
@@ -96,6 +98,29 @@ int get_req_len(uint8_t *query_buf)
     len_buf[1] = query_buf[1];
     query_len = (len_buf[0] << 8) | (len_buf[1]);
     return query_len + 2;
+}
+
+void handle_non_AAAA_req(int *newsockfd, uint8_t *req_buf, int req_buf_len)
+{
+    // Send request back to dig
+
+    // Change qr to 0
+    char qr_str[3];
+    sprintf(qr_str, "%02x", req_buf[4]);
+    qr_str[0] = '8';
+    uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
+    req_buf[4] = new_qr;
+
+    // Change ra to 1 and rcode to 4
+    char ra_rcode_str[3];
+    sprintf(ra_rcode_str, "%02x", req_buf[5]);
+    ra_rcode_str[0] = '8';
+    ra_rcode_str[1] = '4';
+    uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
+    req_buf[5] = new_ra_rcode;
+
+    // Write message back
+    respond_client(newsockfd, req_buf, req_buf_len);
 }
 
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
