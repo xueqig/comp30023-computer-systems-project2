@@ -32,9 +32,6 @@ int main(int argc, char *argv[])
         char *qname = get_qname(req_buf);
         int qtype = get_qtype(req_buf);
 
-        printf("qr: %d\n", qr);
-        printf("qname: %s\n", qname);
-        printf("qtype: %d\n", qtype);
         write_log(qr, qname, qtype, NULL);
 
         // Check if request is AAAA
@@ -57,14 +54,6 @@ int main(int argc, char *argv[])
             uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
             req_buf[5] = new_ra_rcode;
 
-            printf("new req buf: \n");
-            int i;
-            for (i = 0; i < req_buf_len; i++)
-            {
-                printf("%02x ", req_buf[i]);
-            }
-            printf("\n");
-
             // Write message back
             respond_client(newsockfd, req_buf, req_buf_len);
 
@@ -77,8 +66,6 @@ int main(int argc, char *argv[])
         // Act as a client to send request to upperstream server
         char *us_svr_ip = argv[1];
         char *us_svr_port = argv[2];
-        printf("us_svr_ip: %s\n", us_svr_ip);
-        printf("us_svr_port: %s\n", us_svr_port);
 
         uint8_t *res_buf;
         int res_buf_len;
@@ -89,13 +76,10 @@ int main(int argc, char *argv[])
         int res_qtype = get_qtype(res_buf);
         char *res_ipv6_addr = get_ipv6_addr(res_buf);
 
-        printf("res qr: %d\n", res_qr);
-        printf("res qname: %s\n", res_qname);
-        printf("res qtype: %d\n", res_qtype);
         write_log(res_qr, res_qname, res_qtype, res_ipv6_addr);
 
         //////////////////////////////////////////////////////////////////
-        // Write message back
+        // Act as a server to send response back to dig (client)
         respond_client(newsockfd, res_buf, res_buf_len);
 
         close(sockfd);
@@ -207,13 +191,6 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
     // Null-terminate string
     req_buf[bytes_read] = '\0';
 
-    printf("req buf: \n");
-    for (i = 0; i < bytes_read; i++)
-    {
-        printf("%02x ", req_buf[i]);
-    }
-    printf("\n");
-
     return bytes_read;
 }
 
@@ -226,8 +203,6 @@ void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len)
         perror("write");
         exit(EXIT_FAILURE);
     }
-
-    printf("after write\n");
 }
 
 // send query to upstream server and return an response
@@ -235,7 +210,6 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
 {
     int sockfd, n, s;
     struct addrinfo hints, *servinfo, *rp;
-    // char buffer[BUF_SIZE];
 
     // Create address
     memset(&hints, 0, sizeof hints);
@@ -262,13 +236,12 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
             continue;
 
         if (connect(sockfd, rp->ai_addr, rp->ai_addrlen) != -1)
-            break; // connection success
+            break;
 
         close(sockfd);
     }
     if (rp == NULL)
     {
-        // // connection fail
         fprintf(stderr, "client: failed to connect\n");
         exit(EXIT_FAILURE);
     }
@@ -292,14 +265,6 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     // Null-terminate string
     buffer[*res_buf_len] = '\0';
 
-    printf("res from upstream server n: %d\n", *res_buf_len);
-    int i;
-    for (i = 0; i < *res_buf_len; i++)
-    {
-        printf("%02x ", buffer[i]);
-    }
-    printf("\n");
-
     close(sockfd);
 
     return buffer;
@@ -307,6 +272,5 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
 
 void handle_sigint(int sig)
 {
-    printf("Caught signal %d\n", sig);
     exit(0);
 }
