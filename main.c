@@ -100,7 +100,7 @@ int get_req_len(uint8_t *query_buf)
 
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
 {
-    int bytes_read, re, s, i;
+    int bytes_read, re, s;
     struct addrinfo hints, *res;
     struct sockaddr_storage client_addr;
     socklen_t client_addr_size;
