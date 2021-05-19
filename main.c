@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200112L
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,12 +10,12 @@
 #define PORT "8053"
 #define BUF_SIZE 1024
 
-uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
-void handle_sigint(int sig);
-int get_req_len(uint8_t *query_buf);
-void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len);
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf);
 void handle_non_AAAA_req(int *newsockfd, uint8_t *req_buf, int req_buf_len);
+uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
+void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len);
+int get_req_len(uint8_t *req_buf);
+void handle_sigint(int sig);
 
 int main(int argc, char *argv[])
 {
@@ -71,39 +70,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-int get_req_len(uint8_t *query_buf)
-{
-    int query_len = 0;
-    uint8_t len_buf[2];
-    len_buf[0] = query_buf[0];
-    len_buf[1] = query_buf[1];
-    query_len = (len_buf[0] << 8) | (len_buf[1]);
-    return query_len + 2;
-}
-
-void handle_non_AAAA_req(int *newsockfd, uint8_t *req_buf, int req_buf_len)
-{
-    // If request is not AAAA, it should not be forwarded to upstream server
-
-    // Change qr to 0
-    char qr_str[3];
-    sprintf(qr_str, "%02x", req_buf[4]);
-    qr_str[0] = '8';
-    uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
-    req_buf[4] = new_qr;
-
-    // Change ra to 1 and rcode to 4
-    char ra_rcode_str[3];
-    sprintf(ra_rcode_str, "%02x", req_buf[5]);
-    ra_rcode_str[0] = '8';
-    ra_rcode_str[1] = '4';
-    uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
-    req_buf[5] = new_ra_rcode;
-
-    // Write message back
-    respond_client(*newsockfd, req_buf, req_buf_len);
-}
-
+// Accept request sent by dig (client)
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
 {
     int bytes_read, re, s;
@@ -199,18 +166,31 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
     return bytes_read;
 }
 
-// Send response back to dig (client)
-void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len)
+// Handle non AAAA request sent by dig (client)
+void handle_non_AAAA_req(int *newsockfd, uint8_t *req_buf, int req_buf_len)
 {
-    int n = write(newsockfd, res_buf, res_buf_len);
-    if (n < 0)
-    {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
+    // If request is not AAAA, it should not be forwarded to upstream server
+
+    // Change qr to 0
+    char qr_str[3];
+    sprintf(qr_str, "%02x", req_buf[4]);
+    qr_str[0] = '8';
+    uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
+    req_buf[4] = new_qr;
+
+    // Change ra to 1 and rcode to 4
+    char ra_rcode_str[3];
+    sprintf(ra_rcode_str, "%02x", req_buf[5]);
+    ra_rcode_str[0] = '8';
+    ra_rcode_str[1] = '4';
+    uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
+    req_buf[5] = new_ra_rcode;
+
+    // Write message back
+    respond_client(*newsockfd, req_buf, req_buf_len);
 }
 
-// send query to upstream server and return an response
+// Send request to upstream server and return an response
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len)
 {
     int sockfd, n, s;
@@ -275,6 +255,29 @@ uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, 
     return buffer;
 }
 
+// Send response back to dig (client)
+void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len)
+{
+    int n = write(newsockfd, res_buf, res_buf_len);
+    if (n < 0)
+    {
+        perror("write");
+        exit(EXIT_FAILURE);
+    }
+}
+
+// Get the length of request
+int get_req_len(uint8_t *req_buf)
+{
+    int req_len = 0;
+    uint8_t len_buf[2];
+    len_buf[0] = req_buf[0];
+    len_buf[1] = req_buf[1];
+    req_len = (len_buf[0] << 8) | (len_buf[1]);
+    return req_len + 2;
+}
+
+// Handle keyboard interrupt
 void handle_sigint(int sig)
 {
     exit(0);
