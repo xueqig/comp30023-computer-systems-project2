@@ -8,10 +8,11 @@
 #include "helper1.h"
 
 #define AAAA_ID 28
+#define PORT "8053"
 
 uint8_t *query_server(char *node, char *service, uint8_t buffer[], int buf_len, int *res_buf_len);
 void handle_sigint(int sig);
-int get_query_len(uint8_t *query_buf);
+int get_req_len(uint8_t *query_buf);
 void respond_client(int newsockfd, uint8_t *res_buf, int res_buf_len);
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf);
 
@@ -102,7 +103,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-int get_query_len(uint8_t *query_buf)
+int get_req_len(uint8_t *query_buf)
 {
     int query_len = 0;
     uint8_t len_buf[2];
@@ -114,7 +115,7 @@ int get_query_len(uint8_t *query_buf)
 
 int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
 {
-    int n, re, s, i;
+    int bytes_read, re, s, i;
     struct addrinfo hints, *res;
     struct sockaddr_storage client_addr;
     socklen_t client_addr_size;
@@ -125,7 +126,7 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
     hints.ai_socktype = SOCK_STREAM; // TCP
     hints.ai_flags = AI_PASSIVE;     // for bind, listen, accept
     // node (NULL means any interface), service (port), hints, res
-    s = getaddrinfo(NULL, "8053", &hints, &res);
+    s = getaddrinfo(NULL, PORT, &hints, &res);
     if (s != 0)
     {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
@@ -182,20 +183,20 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
     }
 
     // Read characters from the connection, then process
-    n = read(*newsockfd, req_buf, 2047); // n is number of characters read
-    if (n < 0)
+    bytes_read = read(*newsockfd, req_buf, 2047); // n is number of characters read
+    if (bytes_read < 0)
     {
         perror("read");
         exit(EXIT_FAILURE);
     }
 
-    int req_buf_len = get_query_len(req_buf);
+    int req_buf_len = get_req_len(req_buf);
 
-    while (n != req_buf_len)
+    while (bytes_read != req_buf_len)
     {
-        n += read(*newsockfd, req_buf + n, 2047);
+        bytes_read += read(*newsockfd, req_buf + bytes_read, 2047);
 
-        if (n < 0)
+        if (bytes_read < 0)
         {
             perror("read");
             exit(EXIT_FAILURE);
@@ -203,16 +204,16 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
     }
 
     // Null-terminate string
-    req_buf[n] = '\0';
+    req_buf[bytes_read] = '\0';
 
     printf("req buf: \n");
-    for (i = 0; i < n; i++)
+    for (i = 0; i < bytes_read; i++)
     {
         printf("%02x ", req_buf[i]);
     }
     printf("\n");
 
-    return n;
+    return bytes_read;
 }
 
 // Send response back to dig (client)
