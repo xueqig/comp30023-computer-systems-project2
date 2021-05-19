@@ -175,9 +175,8 @@ int accept_request(int *sockfd, int *newsockfd, uint8_t *req_buf)
         exit(EXIT_FAILURE);
     }
 
-    int req_buf_len = get_req_len(req_buf);
-
-    while (bytes_read != req_buf_len)
+    // Continue reading if full request has not been received
+    while (bytes_read != get_req_len(req_buf))
     {
         bytes_read += read(*newsockfd, req_buf + bytes_read, BUF_SIZE - 1);
 
