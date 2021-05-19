@@ -39,25 +39,6 @@ int main(int argc, char *argv[])
         if (qtype != AAAA_ID)
         {
             handle_non_AAAA_req(&newsockfd, req_buf, req_buf_len);
-            // // Send request back to dig
-
-            // // Change qr to 0
-            // char qr_str[3];
-            // sprintf(qr_str, "%02x", req_buf[4]);
-            // qr_str[0] = '8';
-            // uint8_t new_qr = (int)strtol(qr_str, NULL, 16);
-            // req_buf[4] = new_qr;
-
-            // // Change ra to 1 and rcode to 4
-            // char ra_rcode_str[3];
-            // sprintf(ra_rcode_str, "%02x", req_buf[5]);
-            // ra_rcode_str[0] = '8';
-            // ra_rcode_str[1] = '4';
-            // uint8_t new_ra_rcode = (int)strtol(ra_rcode_str, NULL, 16);
-            // req_buf[5] = new_ra_rcode;
-
-            // // Write message back
-            // respond_client(newsockfd, req_buf, req_buf_len);
 
             close(sockfd);
             close(newsockfd);
@@ -102,7 +83,7 @@ int get_req_len(uint8_t *query_buf)
 
 void handle_non_AAAA_req(int *newsockfd, uint8_t *req_buf, int req_buf_len)
 {
-    // Send request back to dig
+    // If request is not AAAA, it should not be forwarded to upstream server
 
     // Change qr to 0
     char qr_str[3];
